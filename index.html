@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Interactive explorer of seasonal solar-induced fluorescence across Finnish forest landscapes."
+    >
+
+    <title>Finnish Forest SIF Explorer</title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="data/favicon.png"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        href="data/favicon.png"
+    >
+
+    <link
+        href="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+    <script
+        src="https://cdn.plot.ly/plotly-3.1.0.min.js"
+    ></script>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/papaparse@5.5.3/papaparse.min.js"
+    ></script>
+
+    <script
+        src="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js"
+    ></script>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     LOADING SCREEN
+     ========================================================= -->
+
+<div id="loading-screen">
+
+    <div class="loading-logo-wrap">
+
+        <img
+            src="data/logo.png"
+            class="loading-logo"
+            alt="Finnish Forest SIF Explorer logo"
+        >
+
+        <div class="loading-ring"></div>
+
+    </div>
+
+    <div class="loading-title">
+        Finnish Forest SIF Explorer
+    </div>
+
+    <div class="loading-subtitle">
+        Loading forest landscapes and SIF observations…
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     APPLICATION
+     ========================================================= -->
+
+<div id="app">
+
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-logo-wrap">
+
+                <img
+                    src="data/logo.png"
+                    class="brand-logo"
+                    alt="Finnish Forest SIF Explorer logo"
+                >
+
+            </div>
+
+            <div>
+
+                <div class="brand-title">
+                    Finnish Forest SIF Explorer
+                </div>
+
+                <div class="brand-subtitle">
+                    Seasonal solar-induced fluorescence · 2019–2025
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="header-status">
+
+            <div class="status-pill">
+                <span class="status-dot"></span>
+                TROPOMI SIF
+            </div>
+
+            <div class="status-pill muted">
+                10 × 10 km landscapes
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =====================================================
+         MODE BAR
+         ===================================================== -->
+
+    <div class="mode-shell">
+
+        <div class="mode-copy">
+
+            <div id="mode-eyebrow" class="eyebrow">
+                EXPLORER MODE
+            </div>
+
+            <div id="mode-description" class="mode-description">
+                Explore forest classes across Finland, regions, quadrants, or individual cells.
+            </div>
+
+        </div>
+
+
+        <div class="mode-switch">
+
+            <button
+                class="mode-button active"
+                data-app-mode="explore"
+            >
+                Explore
+            </button>
+
+            <button
+                class="mode-button"
+                data-app-mode="compare"
+            >
+                Compare
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         MAIN WORKSPACE
+         ===================================================== -->
+
+    <main class="workspace">
+
+
+        <!-- =================================================
+             MAP
+             ================================================= -->
+
+        <section class="map-shell">
+
+
+            <div id="map"></div>
+
+
+            <div class="map-title-card">
+
+                <div class="eyebrow">
+                    STUDY AREA
+                </div>
+
+                <div id="map-title" class="map-title">
+                    Finland
+                </div>
+
+                <div id="map-subtitle" class="map-subtitle">
+                    Click a 10 × 10 km cell for POI-level SIF
+                </div>
+
+            </div>
+
+
+            <div id="explore-map-legend" class="map-legend">
+
+                <div class="legend-title">
+                    Forest class
+                </div>
+
+                <div
+                    class="map-legend-item"
+                    data-legend-class="pine"
+                >
+                    <span
+                        class="legend-swatch"
+                        style="background:#176b3a"
+                    ></span>
+                    Pine-dominated
+                </div>
+
+                <div
+                    class="map-legend-item"
+                    data-legend-class="pine-spruce"
+                >
+                    <span
+                        class="legend-swatch"
+                        style="background:#8ba83c"
+                    ></span>
+                    Pine–spruce
+                </div>
+
+                <div
+                    class="map-legend-item"
+                    data-legend-class="birch-pine"
+                >
+                    <span
+                        class="legend-swatch"
+                        style="background:#d29a39"
+                    ></span>
+                    Birch–pine
+                </div>
+
+                <div
+                    class="map-legend-item"
+                    data-legend-class="birch-spruce"
+                >
+                    <span
+                        class="legend-swatch"
+                        style="background:#8764a8"
+                    ></span>
+                    Birch–spruce
+                </div>
+
+                <div
+                    class="map-legend-item"
+                    data-legend-class="spruce"
+                >
+                    <span
+                        class="legend-swatch"
+                        style="background:#245348"
+                    ></span>
+                    Spruce-dominated
+                </div>
+
+            </div>
+
+
+            <div
+                id="compare-map-legend"
+                class="map-legend hidden"
+            >
+
+                <div class="legend-title">
+                    Comparison
+                </div>
+
+                <div class="map-legend-item">
+
+                    <span
+                        class="legend-swatch"
+                        style="background:#176b3a"
+                    ></span>
+
+                    Selection A
+
+                </div>
+
+                <div class="map-legend-item">
+
+                    <span
+                        class="legend-swatch"
+                        style="background:#245b8a"
+                    ></span>
+
+                    Selection B
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="map-selection-card"
+                class="map-selection-card hidden"
+            >
+
+                <button
+                    id="close-cell-selection"
+                    class="mini-close"
+                    aria-label="Close selected cell"
+                >
+                    ×
+                </button>
+
+                <div class="eyebrow">
+                    SELECTED POI
+                </div>
+
+                <div
+                    id="selected-cell-title"
+                    class="selection-title"
+                >
+                    —
+                </div>
+
+                <div
+                    id="selected-cell-details"
+                    class="selection-details"
+                ></div>
+
+                <button
+                    id="return-group-button"
+                    class="secondary-button"
+                >
+                    Return to group
+                </button>
+
+            </div>
+
+
+            <div
+                id="compare-click-card"
+                class="compare-click-card hidden"
+            >
+
+                <div class="eyebrow">
+                    CELL COMPARISON
+                </div>
+
+                <div
+                    id="compare-click-title"
+                    class="compare-click-title"
+                >
+                    Select POI A
+                </div>
+
+                <div
+                    id="compare-click-text"
+                    class="compare-click-text"
+                >
+                    Click a visible grid cell on the map.
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             CONTROLS
+             ================================================= -->
+
+        <aside class="control-panel">
+
+
+            <section
+                id="explore-summary-section"
+                class="control-section summary-section"
+            >
+
+                <div class="eyebrow">
+                    CURRENT SELECTION
+                </div>
+
+                <div
+                    id="selection-heading"
+                    class="selection-heading"
+                >
+                    Finland
+                </div>
+
+                <div class="metric-row">
+
+                    <div class="metric">
+
+                        <span
+                            id="metric-pois"
+                            class="metric-value"
+                        >
+                            —
+                        </span>
+
+                        <span class="metric-label">
+                            POIs
+                        </span>
+
+                    </div>
+
+                    <div class="metric">
+
+                        <span
+                            id="metric-observations"
+                            class="metric-value"
+                        >
+                            —
+                        </span>
+
+                        <span class="metric-label">
+                            observations
+                        </span>
+
+                    </div>
+
+                    <div class="metric">
+
+                        <span
+                            id="metric-years"
+                            class="metric-value"
+                        >
+                            7
+                        </span>
+
+                        <span class="metric-label">
+                            years
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <section
+                id="compare-summary-section"
+                class="control-section compare-summary-section hidden"
+            >
+
+                <div class="eyebrow">
+                    COMPARISON
+                </div>
+
+                <div class="comparison-summary-grid">
+
+                    <div class="comparison-summary-card selection-a">
+
+                        <div class="comparison-letter">
+                            A
+                        </div>
+
+                        <div>
+
+                            <div
+                                id="compare-summary-a"
+                                class="comparison-summary-name"
+                            >
+                                —
+                            </div>
+
+                            <div
+                                id="compare-summary-a-meta"
+                                class="comparison-summary-meta"
+                            >
+                                —
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="comparison-summary-card selection-b">
+
+                        <div class="comparison-letter">
+                            B
+                        </div>
+
+                        <div>
+
+                            <div
+                                id="compare-summary-b"
+                                class="comparison-summary-name"
+                            >
+                                —
+                            </div>
+
+                            <div
+                                id="compare-summary-b-meta"
+                                class="comparison-summary-meta"
+                            >
+                                —
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <section
+                id="explore-spatial-section"
+                class="control-section"
+            >
+
+                <div class="section-heading-row">
+
+                    <div>
+
+                        <div class="eyebrow">
+                            SPATIAL SELECTION
+                        </div>
+
+                        <h2>
+                            Study area
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="segmented-control">
+
+                    <button
+                        class="spatial-mode active"
+                        data-mode="finland"
+                    >
+                        Finland
+                    </button>
+
+                    <button
+                        class="spatial-mode"
+                        data-mode="quadrant"
+                    >
+                        Quadrant
+                    </button>
+
+                    <button
+                        class="spatial-mode"
+                        data-mode="admin1"
+                    >
+                        Region
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="quadrant-control"
+                    class="conditional-control hidden"
+                >
+
+                    <label for="quadrant-select">
+                        Geographic quadrant
+                    </label>
+
+                    <select id="quadrant-select">
+
+                        <option value="north-west">
+                            North-west
+                        </option>
+
+                        <option value="north-east">
+                            North-east
+                        </option>
+
+                        <option value="south-west">
+                            South-west
+                        </option>
+
+                        <option value="south-east">
+                            South-east
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div
+                    id="admin1-control"
+                    class="conditional-control hidden"
+                >
+
+                    <label for="admin1-select">
+                        Administrative region
+                    </label>
+
+                    <select id="admin1-select"></select>
+
+                </div>
+
+            </section>
+
+
+
+            <section
+                id="compare-spatial-section"
+                class="control-section hidden"
+            >
+
+                <div class="eyebrow">
+                    COMPARISON TYPE
+                </div>
+
+                <h2>
+                    Compare locations
+                </h2>
+
+
+                <div class="segmented-control compare-type-control">
+
+                    <button
+                        class="compare-type active"
+                        data-compare-type="admin1"
+                    >
+                        Regions
+                    </button>
+
+                    <button
+                        class="compare-type"
+                        data-compare-type="quadrant"
+                    >
+                        Quadrants
+                    </button>
+
+                    <button
+                        class="compare-type"
+                        data-compare-type="cell"
+                    >
+                        Cells
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="compare-region-controls"
+                    class="comparison-pair"
+                >
+
+                    <div class="comparison-select-block selection-a">
+
+                        <label for="compare-region-a">
+                            <span class="selection-letter-small">A</span>
+                            Administrative region
+                        </label>
+
+                        <select id="compare-region-a"></select>
+
+                    </div>
+
+
+                    <div class="comparison-versus">
+                        VS
+                    </div>
+
+
+                    <div class="comparison-select-block selection-b">
+
+                        <label for="compare-region-b">
+                            <span class="selection-letter-small">B</span>
+                            Administrative region
+                        </label>
+
+                        <select id="compare-region-b"></select>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="compare-quadrant-controls"
+                    class="comparison-pair hidden"
+                >
+
+                    <div class="comparison-select-block selection-a">
+
+                        <label for="compare-quadrant-a">
+                            <span class="selection-letter-small">A</span>
+                            Geographic quadrant
+                        </label>
+
+                        <select id="compare-quadrant-a">
+
+                            <option value="north-west">
+                                North-west
+                            </option>
+
+                            <option value="north-east">
+                                North-east
+                            </option>
+
+                            <option value="south-west">
+                                South-west
+                            </option>
+
+                            <option value="south-east">
+                                South-east
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="comparison-versus">
+                        VS
+                    </div>
+
+
+                    <div class="comparison-select-block selection-b">
+
+                        <label for="compare-quadrant-b">
+                            <span class="selection-letter-small">B</span>
+                            Geographic quadrant
+                        </label>
+
+                        <select id="compare-quadrant-b">
+
+                            <option value="north-west">
+                                North-west
+                            </option>
+
+                            <option value="north-east">
+                                North-east
+                            </option>
+
+                            <option value="south-west">
+                                South-west
+                            </option>
+
+                            <option value="south-east">
+                                South-east
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="compare-cell-controls"
+                    class="comparison-cell-controls hidden"
+                >
+
+                    <p class="help-text">
+                        Click two currently eligible 10 × 10 km cells.
+                        The first becomes A and the second becomes B.
+                    </p>
+
+
+                    <div class="cell-selection-row">
+
+                        <div class="cell-slot selection-a">
+
+                            <span class="selection-letter-small">
+                                A
+                            </span>
+
+                            <span id="compare-cell-a-label">
+                                Not selected
+                            </span>
+
+                        </div>
+
+
+                        <button
+                            id="clear-compare-cells"
+                            class="text-button"
+                        >
+                            Clear cells
+                        </button>
+
+
+                        <div class="cell-slot selection-b">
+
+                            <span class="selection-letter-small">
+                                B
+                            </span>
+
+                            <span id="compare-cell-b-label">
+                                Not selected
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <section class="control-section">
+
+                <div class="section-heading-row">
+
+                    <div>
+
+                        <div class="eyebrow">
+                            LANDSCAPE FILTER
+                        </div>
+
+                        <h2>
+                            Productive-forest coverage
+                        </h2>
+
+                    </div>
+
+                    <div
+                        id="coverage-badge"
+                        class="value-badge"
+                    >
+                        70–100%
+                    </div>
+
+                </div>
+
+
+                <p class="help-text">
+                    Minimum productive-forest coverage across
+                    VMI 2019, 2021 and 2023.
+                </p>
+
+
+                <div class="range-wrap">
+
+                    <div
+                        id="range-track"
+                        class="range-track"
+                    ></div>
+
+                    <input
+                        id="coverage-min"
+                        class="range-input"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="70"
+                        step="1"
+                    >
+
+                    <input
+                        id="coverage-max"
+                        class="range-input"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="100"
+                        step="1"
+                    >
+
+                </div>
+
+
+                <div class="range-labels">
+                    <span>0%</span>
+                    <span>100%</span>
+                </div>
+
+            </section>
+
+
+
+            <section
+                id="explore-class-section"
+                class="control-section"
+            >
+
+                <div class="section-heading-row">
+
+                    <div>
+
+                        <div class="eyebrow">
+                            COMPOSITION
+                        </div>
+
+                        <h2>
+                            Forest classes
+                        </h2>
+
+                    </div>
+
+                    <button
+                        id="select-all-classes"
+                        class="text-button"
+                    >
+                        Select all
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="forest-class-controls"
+                    class="check-grid"
+                ></div>
+
+            </section>
+
+
+
+            <section
+                id="compare-class-section"
+                class="control-section hidden"
+            >
+
+                <div class="eyebrow">
+                    COMPOSITION
+                </div>
+
+                <h2>
+                    Forest class
+                </h2>
+
+                <p class="help-text">
+                    A and B use the same forest class so the comparison
+                    isolates spatial differences.
+                </p>
+
+                <select id="compare-class-select"></select>
+
+                <div
+                    id="compare-class-note"
+                    class="availability-note"
+                ></div>
+
+            </section>
+
+
+
+            <section class="control-section">
+
+                <div class="eyebrow">
+                    SIF DISPLAY
+                </div>
+
+                <h2>
+                    Variability & uncertainty
+                </h2>
+
+
+                <div class="toggle-list">
+
+
+                    <label class="toggle-row">
+
+                        <div>
+
+                            <span class="toggle-title">
+                                Temporal variability
+                            </span>
+
+                            <span class="toggle-description">
+                                Interannual SD for each POI and calendar month
+                            </span>
+
+                        </div>
+
+                        <input
+                            id="toggle-temporal"
+                            type="checkbox"
+                            checked
+                        >
+
+                        <span class="toggle-switch"></span>
+
+                    </label>
+
+
+                    <label class="toggle-row">
+
+                        <div>
+
+                            <span class="toggle-title">
+                                Spatial variability
+                            </span>
+
+                            <span class="toggle-description">
+                                Within-POI spatial SD
+                            </span>
+
+                        </div>
+
+                        <input
+                            id="toggle-spatial"
+                            type="checkbox"
+                            checked
+                        >
+
+                        <span class="toggle-switch"></span>
+
+                    </label>
+
+
+                    <label class="toggle-row">
+
+                        <div>
+
+                            <span class="toggle-title">
+                                Retrieval uncertainty
+                            </span>
+
+                            <span class="toggle-description">
+                                Propagated SIF retrieval uncertainty
+                            </span>
+
+                        </div>
+
+                        <input
+                            id="toggle-retrieval"
+                            type="checkbox"
+                            checked
+                        >
+
+                        <span class="toggle-switch"></span>
+
+                    </label>
+
+
+                </div>
+
+            </section>
+
+
+
+            <section class="control-section">
+
+                <div class="eyebrow">
+                    MAP
+                </div>
+
+                <h2>
+                    Context layers
+                </h2>
+
+
+                <div class="compact-toggle-grid">
+
+
+                    <label class="compact-toggle">
+
+                        <input
+                            id="toggle-admin1"
+                            type="checkbox"
+                            checked
+                        >
+
+                        <span>
+                            Region borders
+                        </span>
+
+                    </label>
+
+
+                    <label class="compact-toggle">
+
+                        <input
+                            id="toggle-quadrants"
+                            type="checkbox"
+                        >
+
+                        <span>
+                            Quadrants
+                        </span>
+
+                    </label>
+
+
+                </div>
+
+            </section>
+
+
+
+            <section class="control-section reset-section">
+
+                <button
+                    id="reset-button"
+                    class="primary-button"
+                >
+                    Reset explorer
+                </button>
+
+            </section>
+
+
+        </aside>
+
+    </main>
+
+
+
+    <!-- =====================================================
+         ANALYSIS PANEL
+         ===================================================== -->
+
+    <section class="analysis-shell">
+
+
+        <div class="analysis-header">
+
+
+            <div>
+
+                <div class="eyebrow">
+                    SEASONAL SIGNAL
+                </div>
+
+                <h1 id="chart-title">
+                    Seasonal solar-induced fluorescence
+                </h1>
+
+                <p id="chart-subtitle">
+                    —
+                </p>
+
+            </div>
+
+
+            <div class="analysis-meta">
+
+                <div class="meta-chip">
+
+                    <span class="meta-label">
+                        Forest coverage
+                    </span>
+
+                    <span
+                        id="meta-coverage"
+                        class="meta-value"
+                    >
+                        70–100%
+                    </span>
+
+                </div>
+
+                <div class="meta-chip">
+
+                    <span class="meta-label">
+                        Period
+                    </span>
+
+                    <span class="meta-value">
+                        Mar–Sep 2019–2025
+                    </span>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div
+            id="small-selection-warning"
+            class="warning-card hidden"
+        >
+            Small selection. Aggregated variability should be
+            interpreted cautiously.
+        </div>
+
+
+        <div
+            id="comparison-warning"
+            class="warning-card hidden"
+        ></div>
+
+
+        <div
+            id="empty-selection"
+            class="empty-state hidden"
+        >
+
+            <div class="empty-icon">
+                ◌
+            </div>
+
+            <h3 id="empty-selection-title">
+                No POIs match this selection
+            </h3>
+
+            <p id="empty-selection-text">
+                Broaden the productive-forest range, select another
+                forest class, or choose a different region.
+            </p>
+
+        </div>
+
+
+        <div
+            id="sif-chart"
+            class="chart"
+        ></div>
+
+
+        <div class="definition-grid">
+
+
+            <div class="definition-card">
+
+                <div class="definition-symbol forestgreen-line"></div>
+
+                <div>
+
+                    <strong>
+                        Mean SIF
+                    </strong>
+
+                    <span>
+                        Mean across selected POIs and years.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="definition-card">
+
+                <div class="definition-symbol temporal-symbol"></div>
+
+                <div>
+
+                    <strong>
+                        Temporal
+                    </strong>
+
+                    <span>
+                        Mean POI-level interannual SD for the same calendar month.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="definition-card">
+
+                <div class="definition-symbol spatial-symbol"></div>
+
+                <div>
+
+                    <strong>
+                        Spatial
+                    </strong>
+
+                    <span>
+                        Mean area-weighted within-POI spatial SD.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="definition-card">
+
+                <div class="definition-symbol uncertainty-symbol"></div>
+
+                <div>
+
+                    <strong>
+                        Retrieval uncertainty
+                    </strong>
+
+                    <span>
+                        Mean propagated retrieval uncertainty.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <footer>
+
+        <div>
+            Finnish Forest SIF Explorer
+        </div>
+
+        <div>
+            TROPOMI SIF · Finnish MS-NFI/VMI · 2019–2025
+        </div>
+
+    </footer>
+
+
+</div>
+
+
+<script src="js/app.js"></script>
+
+
+</body>
+
+</html>

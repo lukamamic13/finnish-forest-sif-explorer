@@ -1,0 +1,1 @@
+{"years":[2019,2020,2021,2022,2023,2024,2025],"description":"Compact displayed-cell monthly SIF package for filtered group time-series aggregation.","scales":{"5km":{"displayed_cells":10814,"represented_cells":10814,"monthly_rows":600558,"file":"5km.json"},"10km":{"displayed_cells":2896,"represented_cells":2896,"monthly_rows":161261,"file":"10km.json"}}}

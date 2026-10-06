@@ -1,0 +1,33 @@
+{
+  "name": "Finnish Forest SIF Explorer",
+  "architecture": "single-page",
+  "default_scale": "5km",
+  "default_science_view": "signature",
+  "science_views": [
+    "signature",
+    "timeseries"
+  ],
+  "years": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "display_cells": {
+    "5km": 10814,
+    "10km": 2896
+  },
+  "productive_forest_default": {
+    "min": 70,
+    "max": 100
+  },
+  "trend_statistics": [
+    "slope",
+    "r2",
+    "n",
+    "p_value"
+  ]
+}
